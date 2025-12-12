@@ -44,11 +44,21 @@ router.post("/login",async(req,res)=>{
         const userId=isUserExist._id;
         const token=jwt.sign({_id:userId},"ramesh2317");
         console.log(token);
-        res.cookie('token',token);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: false, // Set to true if using https
+            sameSite: 'lax', // Required for cross-site cookie in some contexts, but 'lax' is safer for localhost usually
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        });
         return res.send("User LoggedIn Sucessfully");
     }catch(error){
         return res.send("Error",error);
     }
 });
 
-module.exports=router;
+router.post('/logout', (req, res) => {
+    res.clearCookie('token');
+    res.json({ message: "Logged out successfully" });
+});
+
+module.exports = router;
