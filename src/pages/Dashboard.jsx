@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Plus, Brain, Search, Menu, Sparkles } from 'lucide-react';
+import { Plus, Brain, Search, Menu, Sparkles, Sun, Moon } from 'lucide-react';
+import dashboardBg from '../assets/premium-bg.png';
+import headerBg from '../assets/header-bg.png';
 
+import { useTheme } from '../contexts/ThemeContext';
 import { Sidebar } from '../components/Sidebar';
 import { Card } from '../components/Card';
 import { CreateContentModal } from '../components/CreateContentModal';
@@ -10,12 +14,14 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 
 function Dashboard() {
+    const navigate = useNavigate();
     const [contents, setContents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const { theme, toggleTheme } = useTheme();
 
     const fetchContents = async () => {
         setLoading(true);
@@ -28,6 +34,9 @@ function Dashboard() {
             }
         } catch (error) {
             console.error("Error fetching contents:", error);
+            if (error.response && error.response.status === 401) {
+                navigate('/');
+            }
         } finally {
             setLoading(false);
         }
@@ -65,89 +74,116 @@ function Dashboard() {
     });
 
     return (
-        <div className="min-h-screen bg-gray-950 font-sans text-gray-100">
-            {/* Sidebar */}
-            <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <div className="flex flex-col h-screen overflow-hidden bg-transparent font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300 relative">
+            {/* Background Image Overlay - Moved to root to avoid z-index/stacking issues with scrollable content */}
+            <div
+                className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat w-full h-full pointer-events-none transition-all duration-300"
+                style={{
+                    backgroundImage: `url(${dashboardBg})`,
+                    opacity: 1, // Force opacity
+                    filter: 'brightness(1.5) contrast(1.25) saturate(1.1)' // Force filters via CSS
+                }}
+            ></div>
 
-            {/* Main Content Area */}
-            <div className="ml-64 p-8">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-10">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-indigo-500/10 p-2 rounded-xl text-indigo-400">
-                            <Brain className="w-8 h-8" />
-                        </div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">SecondBrain</h1>
+            {/* Top Header */}
+            <div
+                className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 z-50 transition-all duration-300 bg-cover bg-center"
+                style={{ backgroundImage: `url(${headerBg})` }}
+            >
+                {/* Overlay for better text readability if needed, though image is dark enough */}
+                <div className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[-1]"></div>
+
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="bg-white/10 p-2 rounded-xl text-white backdrop-blur-md">
+                        <Brain className="w-8 h-8" />
                     </div>
+                    <h1 className="text-2xl font-bold text-white tracking-tight drop-shadow-md">SecondBrain</h1>
+                </div>
 
-                    <div className="flex items-center gap-4 w-full max-w-xl mx-auto px-10">
-                        {/* Search bar could go here */}
-                        <div className="relative w-full">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                            <input
-                                type="text"
-                                placeholder="Search your brain..."
-                                className="w-full pl-10 pr-4 py-3 rounded-xl border-none ring-1 ring-gray-800 bg-gray-900/50 text-gray-200 placeholder:text-gray-600 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none transition-all"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <Button
-                            onClick={() => setIsChatOpen(true)}
-                            startIcon={<Sparkles className="w-5 h-5" />}
-                            size="md"
-                            variant="secondary"
-                        >
-                            Ask AI
-                        </Button>
-                        <Button
-                            onClick={() => setIsModalOpen(true)}
-                            startIcon={<Plus className="w-5 h-5" />}
-                            size="md"
-                            variant="primary"
-                        >
-                            Add Content
-                        </Button>
+                <div className="flex items-center gap-4 w-full max-w-xl mx-auto px-10 relative z-10">
+                    <div className="relative w-full group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-white transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Search your brain..."
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border-none ring-1 ring-white/20 bg-black/20 text-white placeholder:text-gray-300 focus:ring-2 focus:ring-white/40 focus:bg-black/30 focus:outline-none transition-all backdrop-blur-md"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
                 </div>
 
-                {/* Content Grid */}
-                {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                <div className="flex items-center gap-4 relative z-10">
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 rounded-xl text-white hover:bg-white/10 transition-colors backdrop-blur-md"
+                    >
+                        {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    </button>
+                    <Button
+                        onClick={() => setIsChatOpen(true)}
+                        startIcon={<Sparkles className="w-5 h-5" />}
+                        size="md"
+                        variant="secondary"
+                        className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30 backdrop-blur-md shadow-lg"
+                    >
+                        Ask AI
+                    </Button>
+                    <Button
+                        onClick={() => setIsModalOpen(true)}
+                        startIcon={<Plus className="w-5 h-5" />}
+                        size="md"
+                        variant="primary"
+                        className="shadow-xl shadow-indigo-900/20"
+                    >
+                        Add Content
+                    </Button>
+                </div>
+            </div>
+
+            {/* Main Layout Area */}
+            <div className="flex flex-1 overflow-hidden">
+                {/* Sidebar */}
+                <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+
+                <div className="flex-1 overflow-y-auto relative p-8 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800 scrollbar-track-transparent z-10">
+
+                    {/* Content */}
+                    <div className="relative z-10 max-w-7xl mx-auto">
+                        {loading ? (
+                            <div className="flex items-center justify-center h-64">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                            </div>
+                        ) : filteredContents.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
+                                {filteredContents.map((content) => (
+                                    <Card
+                                        key={content._id}
+                                        title={content.title}
+                                        type={content.type}
+                                        link={content.link}
+                                        tags={content.tags}
+                                        thumbnail={content.thumbnail}
+                                        onDelete={async () => {
+                                            try {
+                                                await axios.delete(`http://localhost:3000/api/v1/remove-content/${content._id}`, { withCredentials: true });
+                                                fetchContents();
+                                            } catch (e) { console.error(e) }
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+                                <div className="bg-gray-100 dark:bg-gray-900/50 p-6 rounded-full mb-6 text-gray-400 dark:text-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-800 transition-colors duration-300">
+                                    <Brain className="w-16 h-16 opacity-50" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">No content found</h3>
+                                <p className="text-gray-500 mt-2 max-w-xs">{searchQuery ? 'Try a different search term.' : 'Start adding your digital brain memories.'}</p>
+                            </div>
+                        )}
                     </div>
-                ) : filteredContents.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredContents.map((content) => (
-                            <Card
-                                key={content._id}
-                                title={content.title}
-                                type={content.type}
-                                link={content.link}
-                                tags={content.tags}
-                                thumbnail={content.thumbnail}
-                                onDelete={async () => {
-                                    // Simple delete flow, ideally should be in parent or have confirmation
-                                    try {
-                                        await axios.delete(`http://localhost:3000/api/v1/remove-content/${content._id}`, { withCredentials: true });
-                                        fetchContents();
-                                    } catch (e) { console.error(e) }
-                                }}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center h-64 text-center">
-                        <div className="bg-gray-900 p-4 rounded-full mb-4 text-gray-700">
-                            <Brain className="w-12 h-12 opacity-50" />
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-300">No content found</h3>
-                        <p className="text-gray-500 mt-2 max-w-xs">{searchQuery ? 'Try a different search term.' : 'Start adding your digital brain memories.'}</p>
-                    </div>
-                )}
+                </div>
             </div>
 
             <CreateContentModal

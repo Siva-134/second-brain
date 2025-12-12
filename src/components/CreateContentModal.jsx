@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Plus, Loader2 } from 'lucide-react';
 import { Button } from './Button';
 import axios from 'axios';
@@ -16,6 +17,7 @@ const DarkInput = ({ label, ...props }) => (
 );
 
 export const CreateContentModal = ({ open, onClose, onContentAdded }) => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
@@ -60,7 +62,12 @@ export const CreateContentModal = ({ open, onClose, onContentAdded }) => {
             }
         } catch (error) {
             console.error("Error adding content:", error);
-            alert("Failed to add content. Please try again.");
+            if (error.response && error.response.status === 401) {
+                alert("Session expired. Please login again.");
+                navigate('/');
+            } else {
+                alert("Failed to add content. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
