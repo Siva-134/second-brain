@@ -56,6 +56,24 @@ router.post("/login",async(req,res)=>{
     }
 });
 
+router.get("/search", async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q) return res.json({ users: [] });
+
+        const users = await User.find({
+            $or: [
+                { name: { $regex: q, $options: 'i' } },
+                { email: { $regex: q, $options: 'i' } }
+            ]
+        }).select('name email _id').limit(5);
+
+        res.json({ users });
+    } catch (e) {
+        res.status(500).json({ message: "Error searching users" });
+    }
+});
+
 router.post('/logout', (req, res) => {
     res.clearCookie('token');
     res.json({ message: "Logged out successfully" });

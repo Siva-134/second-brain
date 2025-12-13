@@ -8,21 +8,8 @@ const cors = require('cors');
 
 app.use(cors({
     origin: function(origin, callback) {
-        // Debugging log to see what origin is being received
-        console.log('CORS Origin Check:', origin);
-
-        // allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        // allow any localhost/127.0.0.1 origin for development ease
-        if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
-            // Explicitly return the origin string to ensure the header is set correctly
-            return callback(null, origin);
-        }
-        
-        // Block other origins
-        var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-        return callback(new Error(msg), false);
+        // Allow all origins for now to avoid CORS issues during initial deployment
+        return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -36,11 +23,14 @@ app.use('/api/v1', userRoutes);
 app.use('/api/v1', contentRoutes);
 app.use('/api/v1', require('./routes/brain'));
 
-mongoose.connect("mongodb://localhost:27017/secondbrain").then(() => {
-    app.listen(3000, () => {
-        console.log("server running on 3000...");
+const PORT = process.env.PORT || 3000;
+const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/secondbrain";
+
+mongoose.connect(MONGO_URL).then(() => {
+    app.listen(PORT, () => {
+        console.log(`server running on ${PORT}...`);
     })
 })
     .catch((err) => {
-        console.log(err);
+        console.log("MongoDB connection error:", err);
     });

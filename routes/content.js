@@ -55,17 +55,43 @@ router.post('/add-content', userAuth, async (req, res) => {
 
 router.get('/my-contents', userAuth, async (req, res) => {
     try {
-        const contents = await Content.find({ userId: req.user._id }).populate('tags').populate('userId', 'name email');
+        const contents = await Content.find({
+            $or: [
+                { userId: req.user._id },
+                { sharedWith: req.user._id }
+            ]
+        }).populate('tags').populate('userId', 'name email');
 
         return res.status(200).json({
             message: "Contents fetched successfully",
-            data: contents
+            data: contents,
+            currentUserId: req.user._id
         })
     } catch (error) {
         return res.status(500).json({
             message: "Error fetching contents",
             error: error.message
         })
+    }
+});
+
+router.post('/share-content', userAuth, async (req, res) => {
+    try {
+        const { contentId, targetUserId } = req.body;
+        
+        const content = await Content.findOne({ _id: contentId, userId: req.user._id });
+        if (!content) {
+            return res.status(404).json({ message: "Content not found or unauthorized" });
+        }
+
+        if (!content.sharedWith.includes(targetUserId)) {
+            content.sharedWith.push(targetUserId);
+            await content.save();
+        }
+
+        res.status(200).json({ message: "Content shared successfully" });
+    } catch (e) {
+        res.status(500).json({ message: "Error sharing content", error: e.message });
     }
 });
 
