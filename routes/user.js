@@ -8,7 +8,7 @@ router.post('/register',async(req,res)=>{
         const {name,email,password}=req.body;
 
         if(!name||!email||!password){
-            res.send("Required Fileds Missing");
+            return res.status(400).json({ message: "Required Fields Missing" });
         }
 
         const newUser=new User({
@@ -18,11 +18,18 @@ router.post('/register',async(req,res)=>{
         });
 
         await newUser.save();
-        res.send("User Registered Sucessfully");
+        
+        // Auto-login: Generate token immediately
+        const token = jwt.sign({_id: newUser._id}, "ramesh2317");
+
+        res.status(201).json({
+            message: "User Registered Successfully",
+            token: token
+        });
 
     }catch(error){
         console.log(error);
-        return res.send("Error",error);
+        return res.status(500).json({ message: "Error registering user", error });
     }
 });
 
@@ -34,11 +41,11 @@ router.post("/login",async(req,res)=>{
         const isUserExist=await User.findOne({email:email});
 
         if(!isUserExist){
-            return res.send("User does not exist");
+            return res.status(400).json({ message: "User does not exist" });
         }
 
         if(isUserExist.password!=password){
-            return res.send("Unauthorized  Credentials");
+            return res.status(401).json({ message: "Invalid Credentials" });
         }
 
         const userId=isUserExist._id;
