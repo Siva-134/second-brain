@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-export const API_URL = import.meta.env.VITE_API_URL || "https://second-brain-2-gwgk.onrender.com/api/v1";
+// Hardcoded for production stability
+export const API_URL = "https://second-brain-2-gwgk.onrender.com/api/v1";
 
 const api = axios.create({
     baseURL: API_URL,
