@@ -46,8 +46,8 @@ router.post("/login",async(req,res)=>{
         console.log(token);
         res.cookie('token', token, {
             httpOnly: true,
-            secure: false, // Set to true if using https
-            sameSite: 'lax', // Required for cross-site cookie in some contexts, but 'lax' is safer for localhost usually
+            secure: true, // Required for SameSite: None
+            sameSite: 'None', // Required for cross-site (Vercel -> Render)
             maxAge: 24 * 60 * 60 * 1000 // 24 hours
         });
         return res.send("User LoggedIn Sucessfully");
