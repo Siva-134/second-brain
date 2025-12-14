@@ -44,13 +44,12 @@ router.post("/login",async(req,res)=>{
         const userId=isUserExist._id;
         const token=jwt.sign({_id:userId},"ramesh2317");
         console.log(token);
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: true, // Required for SameSite: None
-            sameSite: 'None', // Required for cross-site (Vercel -> Render)
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        
+        // Return token in response body for frontend to save in localStorage
+        return res.json({
+            message: "User LoggedIn Sucessfully",
+            token: token
         });
-        return res.send("User LoggedIn Sucessfully");
     }catch(error){
         return res.send("Error",error);
     }
