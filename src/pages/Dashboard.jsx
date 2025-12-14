@@ -12,25 +12,34 @@ import { CreateContentModal } from '../components/CreateContentModal';
 import { BrainChat } from '../components/BrainChat';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { ShareModal } from '../components/ShareModal';
+import { API_URL } from '../config';
 
+// Dashboard component
 function Dashboard() {
     const navigate = useNavigate();
     const [contents, setContents] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState("all");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [shareModalOpen, setShareModalOpen] = useState(false);
+    const [shareData, setShareData] = useState(null);
+    const [currentUserId, setCurrentUserId] = useState(null);
     const { theme, toggleTheme } = useTheme();
 
     const fetchContents = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('http://localhost:3000/api/v1/my-contents', {
+            const response = await axios.get(`${API_URL}/my-contents`, {
                 withCredentials: true
             });
             if (response.data && response.data.data) {
                 setContents(response.data.data);
+                if (response.data.currentUserId) {
+                    setCurrentUserId(response.data.currentUserId);
+                }
             }
         } catch (error) {
             console.error("Error fetching contents:", error);
@@ -58,6 +67,11 @@ function Dashboard() {
                 tabMatch = content.link && (content.link.includes('twitter.com') || content.link.includes('x.com'));
             } else if (activeTab === 'facebook') {
                 tabMatch = content.link && content.link.includes('facebook.com');
+            } else if (activeTab === 'shared') {
+                // Show content shared WITH me OR content I shared with OTHERS
+                const isSharedWithMe = content.userId._id !== currentUserId;
+                const isSharedByMe = content.userId._id === currentUserId && content.sharedWith && content.sharedWith.length > 0;
+                tabMatch = isSharedWithMe || isSharedByMe;
             }
         }
 
@@ -80,14 +94,13 @@ function Dashboard() {
                 className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat w-full h-full pointer-events-none transition-all duration-300"
                 style={{
                     backgroundImage: `url(${dashboardBg})`,
-                    opacity: 1, // Force opacity
-                    filter: 'brightness(1.5) contrast(1.25) saturate(1.1)' // Force filters via CSS
+                    opacity: 1 // Force opacity
                 }}
             ></div>
 
             {/* Top Header */}
             <div
-                className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 z-50 transition-all duration-300 bg-cover bg-center"
+                className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 z-50 transition-all duration-300 bg-cover bg-center relative"
                 style={{ backgroundImage: `url(${headerBg})` }}
             >
                 {/* Overlay for better text readability if needed, though image is dark enough */}
@@ -156,7 +169,7 @@ function Dashboard() {
                             </div>
                         ) : filteredContents.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
-                                {filteredContents.map((content) => (
+                                {filteredContents.map((content) =>
                                     <Card
                                         key={content._id}
                                         title={content.title}
@@ -164,14 +177,19 @@ function Dashboard() {
                                         link={content.link}
                                         tags={content.tags}
                                         thumbnail={content.thumbnail}
-                                        onDelete={async () => {
+                                        contentId={content._id}
+                                        onShare={(data) => {
+                                            setShareData(data);
+                                            setShareModalOpen(true);
+                                        }}
+                                        onDelete={content.userId._id === currentUserId ? async () => {
                                             try {
-                                                await axios.delete(`http://localhost:3000/api/v1/remove-content/${content._id}`, { withCredentials: true });
+                                                await axios.delete(`${API_URL}/remove-content/${content._id}`, { withCredentials: true });
                                                 fetchContents();
                                             } catch (e) { console.error(e) }
-                                        }}
+                                        } : null}
                                     />
-                                ))}
+                                )}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center h-[60vh] text-center">
@@ -190,6 +208,14 @@ function Dashboard() {
                 open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onContentAdded={fetchContents}
+            />
+
+            <ShareModal
+                isOpen={shareModalOpen}
+                onClose={() => setShareModalOpen(false)}
+                title={shareData?.title}
+                link={shareData?.link}
+                contentId={shareData?.contentId}
             />
 
             <BrainChat

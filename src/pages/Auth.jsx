@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import ThreeDBackground from '../components/ThreeDBackground';
 import { Brain, ArrowRight } from 'lucide-react';
 import authBg from '../assets/auth-bg.png';
+import { API_URL } from '../config';
 
 function Auth() {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ function Auth() {
                 ? { email: formData.email, password: formData.password }
                 : formData;
 
-            const response = await axios.post(`http://localhost:3000/api/v1${endpoint}`, payload, {
+            const response = await axios.post(`${API_URL}${endpoint}`, payload, {
                 withCredentials: true
             });
 

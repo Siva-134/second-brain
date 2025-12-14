@@ -1,7 +1,8 @@
-import { LayoutDashboard, Youtube, Twitter, Facebook, Grid, FileText, Video, Mic, Image as ImageIcon, LogOut } from "lucide-react";
+import { LayoutDashboard, Youtube, Twitter, Facebook, Grid, FileText, Video, Mic, Image as ImageIcon, LogOut, Users } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../contexts/ThemeContext';
+import { API_URL } from '../config';
 
 export const Sidebar = ({ activeTab, onTabChange }) => {
     const navigate = useNavigate();
@@ -9,7 +10,7 @@ export const Sidebar = ({ activeTab, onTabChange }) => {
 
     const handleLogout = async () => {
         try {
-            await axios.post('http://localhost:3000/api/v1/logout', {}, { withCredentials: true });
+            await axios.post(`${API_URL}/logout`, {}, { withCredentials: true });
             navigate('/auth');
         } catch (error) {
             console.error("Logout failed:", error);
@@ -20,6 +21,7 @@ export const Sidebar = ({ activeTab, onTabChange }) => {
 
     const menuItems = [
         { id: 'all', label: 'All Notes', icon: <Grid className="w-5 h-5" /> },
+        { id: 'shared', label: 'Shared Content', icon: <Users className="w-5 h-5 text-purple-500" /> },
         { id: 'youtube', label: 'Youtube', icon: <Youtube className="w-5 h-5 text-red-500" /> },
         { id: 'twitter', label: 'Twitter', icon: <Twitter className="w-5 h-5 text-blue-400" /> },
     ];
