@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
 import { Send, Bot, User, X, Loader2, FileText, Sparkles, ExternalLink } from 'lucide-react';
-import { API_URL } from '../config';
+import api from '../api';
 import ReactMarkdown from 'react-markdown';
 import { Button } from './Button';
 
@@ -36,10 +35,8 @@ export const BrainChat = ({ isOpen, onClose }) => {
         setLoading(true);
 
         try {
-            const response = await axios.post(`${API_URL}/ask-brain`, {
+            const response = await api.post('/ask-brain', {
                 question
-            }, {
-                withCredentials: true
             });
 
             const data = response.data;

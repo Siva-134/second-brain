@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Search, Users, Copy, Check, Send } from 'lucide-react';
-import axios from 'axios';
-import { API_URL } from '../config';
+import api from '../api';
 
 export const ShareModal = ({ isOpen, onClose, title, link, contentId }) => {
     if (!isOpen) return null;
@@ -33,7 +32,7 @@ export const ShareModal = ({ isOpen, onClose, title, link, contentId }) => {
 
             setSearching(true);
             try {
-                const response = await axios.get(`${API_URL}/search?q=${searchQuery}`, { withCredentials: true });
+                const response = await api.get(`/search?q=${searchQuery}`);
                 setSearchResults(response.data.users || []);
             } catch (error) {
                 console.error("Search error", error);
@@ -58,10 +57,10 @@ export const ShareModal = ({ isOpen, onClose, title, link, contentId }) => {
     const handleInternalShare = async (targetUserId) => {
         setSharingMap(prev => ({ ...prev, [targetUserId]: 'pending' }));
         try {
-            await axios.post(`${API_URL}/share-content`, {
+            await api.post('/share-content', {
                 contentId,
                 targetUserId
-            }, { withCredentials: true });
+            });
 
             setSharingMap(prev => ({ ...prev, [targetUserId]: 'success' }));
         } catch (error) {

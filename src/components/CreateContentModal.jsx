@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Plus, Loader2 } from 'lucide-react';
 import { Button } from './Button';
-import axios from 'axios';
-import { API_URL } from '../config';
+import api from '../api';
 
 // Local Input component just for modal/dark theme if needed, or reuse but pass className
 // I will just use standard input styles here to match dark mode cleanly
@@ -45,9 +44,7 @@ export const CreateContentModal = ({ open, onClose, onContentAdded }) => {
                 description: formData.description
             };
 
-            const response = await axios.post(`${API_URL}/add-content`, payload, {
-                withCredentials: true
-            });
+            const response = await api.post('/add-content', payload);
 
             if (response.status === 201) {
                 onContentAdded();

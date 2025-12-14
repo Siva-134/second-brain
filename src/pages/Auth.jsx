@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ThreeDBackground from '../components/ThreeDBackground';
 import { Brain, ArrowRight } from 'lucide-react';
 import authBg from '../assets/auth-bg.png';
-import { API_URL } from '../config';
+import api from '../api';
 
 function Auth() {
     const navigate = useNavigate();
@@ -35,14 +34,15 @@ function Auth() {
                 ? { email: formData.email, password: formData.password }
                 : formData;
 
-            const response = await axios.post(`${API_URL}${endpoint}`, payload, {
-                withCredentials: true
-            });
+            const response = await api.post(endpoint, payload);
 
             setMessage(response.data.message);
 
             if (response.status === 200 || response.status === 201) {
                 console.log('Success:', response.data);
+                if (response.data.token) {
+                    localStorage.setItem('token', response.data.token);
+                }
                 navigate('/dashboard');
             }
         } catch (error) {

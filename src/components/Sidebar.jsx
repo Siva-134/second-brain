@@ -1,8 +1,7 @@
 import { LayoutDashboard, Youtube, Twitter, Facebook, Grid, FileText, Video, Mic, Image as ImageIcon, LogOut, Users } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { useTheme } from '../contexts/ThemeContext';
-import { API_URL } from '../config';
 
 export const Sidebar = ({ activeTab, onTabChange }) => {
     const navigate = useNavigate();
@@ -10,7 +9,8 @@ export const Sidebar = ({ activeTab, onTabChange }) => {
 
     const handleLogout = async () => {
         try {
-            await axios.post(`${API_URL}/logout`, {}, { withCredentials: true });
+            await api.post('/logout'); // Remove config withCredentials
+            localStorage.removeItem('token'); // Clear token
             navigate('/auth');
         } catch (error) {
             console.error("Logout failed:", error);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { Plus, Brain, Search, Menu, Sparkles, Sun, Moon } from 'lucide-react';
 import dashboardBg from '../assets/premium-bg.png';
 import headerBg from '../assets/header-bg.png';
@@ -32,9 +32,7 @@ function Dashboard() {
     const fetchContents = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_URL}/my-contents`, {
-                withCredentials: true
-            });
+            const response = await api.get('/my-contents');
             if (response.data && response.data.data) {
                 setContents(response.data.data);
                 if (response.data.currentUserId) {
@@ -184,7 +182,7 @@ function Dashboard() {
                                         }}
                                         onDelete={content.userId._id === currentUserId ? async () => {
                                             try {
-                                                await axios.delete(`${API_URL}/remove-content/${content._id}`, { withCredentials: true });
+                                                await api.delete(`/remove-content/${content._id}`);
                                                 fetchContents();
                                             } catch (e) { console.error(e) }
                                         } : null}
