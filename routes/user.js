@@ -2,6 +2,7 @@ const express=require('express');
 const User = require('../models/user');
 const router=express.Router();
 const jwt=require('jsonwebtoken');
+const userAuth = require('../middleware/auth');
 
 router.post('/register',async(req,res)=>{
     try{
@@ -62,6 +63,18 @@ router.post("/login",async(req,res)=>{
     }
 });
 
+router.get("/me", userAuth, (req, res) => {
+    try {
+        const user = req.user;
+        res.status(200).json({
+            name: user.name,
+            email: user.email
+        });
+    } catch (e) {
+        res.status(500).json({ message: "Error fetching user details" });
+    }
+});
+
 router.get("/search", async (req, res) => {
     try {
         const { q } = req.query;
@@ -83,6 +96,26 @@ router.get("/search", async (req, res) => {
 router.post('/logout', (req, res) => {
     res.clearCookie('token');
     res.json({ message: "Logged out successfully" });
+});
+router.post('/change-password', userAuth, async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        // User is attached by userAuth middleware
+        const user = req.user; 
+
+        if (user.password !== oldPassword) {
+            return res.status(400).json({ message: "Incorrect current password" });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: "Password updated successfully" });
+
+    } catch (error) {
+        console.error("Change password error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 module.exports = router;

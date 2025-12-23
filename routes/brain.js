@@ -6,7 +6,7 @@ const Content = require("../models/content");
 require("dotenv").config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 router.post("/ask-brain", userAuth, async (req, res) => {
     try {
@@ -19,12 +19,17 @@ router.post("/ask-brain", userAuth, async (req, res) => {
         // Prepare context from user's content
         const context = userContent.map(c => `Title: ${c.title}\nType: ${c.type}\nTags: ${c.tags.join(", ")}\nLink: ${c.link}\nDescription: ${c.description || ""}`).join("\n\n");
 
-        const prompt = `You are a "Second Brain" assistant. Answer the user's question based ONLY on the following content from their knowledge base. If the answer is not in the context, say so.
+        const prompt = `You are a helpful "Second Brain" assistant.
         
-        User's Content:
+        First, check the following "User's Knowledge Base" for any relevant information to answer the question. 
+        If you find relevant information in the Knowledge Base, use it to answer and explicitly reference it.
+        
+        If the answer is NOT found in the Knowledge Base, simply answer the question using your own general knowledge as a helpful AI assistant.
+        
+        User's Knowledge Base:
         ${context}
 
-        Question: ${question}
+        User's Question: ${question}
         `;
 
         const result = await model.generateContent(prompt);

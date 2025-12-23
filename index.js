@@ -22,6 +22,7 @@ app.use(cookieParser());
 app.use('/api/v1', userRoutes);
 app.use('/api/v1', contentRoutes);
 app.use('/api/v1', require('./routes/brain'));
+app.use('/api/v1', require('./routes/project'));
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/secondbrain";

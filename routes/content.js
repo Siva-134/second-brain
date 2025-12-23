@@ -8,7 +8,7 @@ const crypto = require('crypto');
 
 router.post('/add-content', userAuth, async (req, res) => {
     try {
-        const { type, link, title, tags } = req.body;
+        const { type, link, title, tags, platform, projectId } = req.body;
 
         if (!type || !link || !title) {
             return res.status(400).json({
@@ -31,12 +31,37 @@ router.post('/add-content', userAuth, async (req, res) => {
             }
         }
 
+        let thumbnail = '';
+        try {
+            if (link) {
+               // Try to fetch metadata if Node version supports fetch (v18+)
+               if (global.fetch) {
+                   const controller = new AbortController();
+                   const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+                   const response = await fetch(link, { signal: controller.signal });
+                   clearTimeout(timeoutId);
+                   
+                   if (response.ok) {
+                       const html = await response.text();
+                       const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+                       const twitterImage = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i);
+                       thumbnail = ogImage ? ogImage[1] : (twitterImage ? twitterImage[1] : '');
+                   }
+               }
+            }
+        } catch (e) {
+            console.log("Metadata fetch failed (ignoring):", e.message);
+        }
+
         const newContent = new Content({
             type,
             link,
             title,
             tags: tagIds,
-            userId: req.user._id
+            platform,
+            userId: req.user._id,
+            projectId,
+            thumbnail
         });
 
         await newContent.save();
@@ -53,14 +78,73 @@ router.post('/add-content', userAuth, async (req, res) => {
     }
 });
 
+router.put('/update-content/:contentId', userAuth, async (req, res) => {
+    try {
+        const { contentId } = req.params;
+        const { type, link, title, tags, platform } = req.body;
+
+        const content = await Content.findOne({ _id: contentId, userId: req.user._id });
+
+        if (!content) {
+            return res.status(404).json({
+                message: "Content not found or you don't have permission to edit"
+            })
+        }
+
+        const tagIds = [];
+
+        if (tags && tags.length > 0) {
+            for (let tagTitle of tags) {
+                let existingTag = await Tag.findOne({ title: tagTitle });
+
+                if (!existingTag) {
+                    existingTag = new Tag({ title: tagTitle });
+                    await existingTag.save();
+                }
+
+                tagIds.push(existingTag._id);
+            }
+        }
+
+        content.title = title || content.title;
+        content.link = link || content.link;
+        content.type = type || content.type;
+        content.platform = platform || content.platform;
+        content.tags = tagIds.length > 0 ? tagIds : content.tags;
+
+        await content.save();
+
+        return res.status(200).json({
+            message: "Content updated successfully",
+            data: content
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Error updating content",
+            error: error.message
+        })
+    }
+});
+
 router.get('/my-contents', userAuth, async (req, res) => {
     try {
-        const contents = await Content.find({
+        const { projectId } = req.query;
+        let query = {
             $or: [
                 { userId: req.user._id },
                 { sharedWith: req.user._id }
             ]
-        }).populate('tags').populate('userId', 'name email');
+        };
+
+        if (projectId) {
+            query = {
+                userId: req.user._id,
+                projectId: projectId
+            };
+        }
+
+        const contents = await Content.find(query).populate('tags').populate('userId', 'name email');
 
         return res.status(200).json({
             message: "Contents fetched successfully",

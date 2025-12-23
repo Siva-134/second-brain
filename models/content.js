@@ -10,8 +10,12 @@ const contentSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['image', 'audio', 'video', 'article'],
+        enum: ['image', 'audio', 'video', 'article', 'git_repo'],
         required: true
+    },
+    platform: {
+        type: String,
+        required: false
     },
     title: {
         type: String,
@@ -31,7 +35,16 @@ const contentSchema = new mongoose.Schema({
     sharedWith: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-    }]
+    }],
+    projectId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project',
+        required: false
+    },
+    thumbnail: {
+        type: String,
+        required: false
+    }
 });
 
 const Content = mongoose.model("Content", contentSchema);
