@@ -1,23 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Share2, Trash2, Youtube, Twitter, FileText, Video, Mic, Image as ImageIcon, ExternalLink, Play, X, Check } from "lucide-react";
+import { Share2, Trash2, Youtube, Twitter, FileText, Video, Mic, Image as ImageIcon, ExternalLink, Play, X, Check, Github, Pencil } from "lucide-react";
 
 // Card component for displaying content
-export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, onShare }) => {
+export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, onShare, onEdit, platform }) => {
     const [imageError, setImageError] = useState(false);
     const [showEmbed, setShowEmbed] = useState(false);
 
     const getYouTubeThumbnail = (url, quality = 'maxresdefault') => {
         if (!url) return null;
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/|live\/)([^#&?]*).*/;
         const match = url.match(regExp);
         return (match && match[2].length === 11)
             ? `https://img.youtube.com/vi/${match[2]}/${quality}.jpg`
             : null;
     };
 
+
     const getYouTubeId = (url) => {
         if (!url) return null;
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/|live\/)([^#&?]*).*/;
         const match = url.match(regExp);
         return (match && match[2].length === 11) ? match[2] : null;
     };
@@ -43,8 +44,9 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
     const displayThumbnail = currentThumbnail;
 
     const getIcon = () => {
-        if (type === "youtube" || (link && link.includes("youtube.com"))) return <Youtube className="w-5 h-5 text-red-500" />;
-        if (type === "twitter" || (link && (link.includes("twitter.com") || link.includes("x.com"))) && !link.includes("youtube")) return <Twitter className="w-5 h-5 text-blue-400" />;
+        if (type === "git_repo" || (link && link.includes("github.com")) || (platform && platform.toLowerCase() === 'github')) return <Github className="w-5 h-5 text-gray-700 dark:text-gray-300" />;
+        if (type === "youtube" || (link && link.includes("youtube.com")) || (platform && platform.toLowerCase() === 'youtube')) return <Youtube className="w-5 h-5 text-red-500" />;
+        if ((type === "twitter" || (link && (link.includes("twitter.com") || link.includes("x.com")))) || (platform && (platform.toLowerCase() === 'twitter' || platform.toLowerCase() === 'x'))) return <Twitter className="w-5 h-5 text-blue-400" />;
 
         switch (type) {
             case "video": return <Video className="w-5 h-5 text-indigo-400" />;
@@ -55,6 +57,15 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
         }
     };
 
+    const getLabel = () => {
+        if (platform) return platform;
+        if (type === "git_repo" || (link && link.includes("github.com"))) return "GitHub";
+        if (type === "youtube" || (link && link.includes("youtube.com"))) return "YouTube";
+        if ((type === "twitter" || (link && (link.includes("twitter.com") || link.includes("x.com")))) && !link.includes("youtube")) return "Twitter";
+
+        return type ? type.charAt(0).toUpperCase() + type.slice(1) : "Content";
+    };
+
     const isYouTube = link && (link.includes("youtube.com") || link.includes("youtu.be"));
     const youTubeId = isYouTube ? getYouTubeId(link) : null;
 
@@ -62,6 +73,8 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
         e.preventDefault();
         e.stopPropagation();
         if (isYouTube && youTubeId) {
+            setShowEmbed(true);
+        } else if (type === 'article' || type === 'video') {
             setShowEmbed(true);
         } else {
             window.open(link, '_blank');
@@ -80,28 +93,51 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
         <div className="bg-white dark:bg-[#1a1b2e] rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-md flex flex-col h-full relative group transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
 
             {/* Thumbnail / Embed Area */}
-            <div className="h-48 bg-gray-900 flex items-center justify-center relative overflow-hidden">
-                {showEmbed && youTubeId ? (
+            <div className="h-36 bg-gray-900 flex items-center justify-center relative overflow-hidden">
+                {showEmbed ? (
                     <div className="w-full h-full bg-black relative animate-in fade-in zoom-in-95 duration-300">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowEmbed(false);
-                            }}
-                            className="absolute top-2 right-2 z-30 p-1 bg-black/50 text-white rounded-full hover:bg-black/80 transition-colors"
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
-                        <iframe
-                            width="100%"
-                            height="100%"
-                            src={`https://www.youtube.com/embed/${youTubeId}?autoplay=1`}
-                            title={title}
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="absolute inset-0"
-                        ></iframe>
+                        <div className="absolute top-2 right-2 z-30 flex items-center gap-2">
+                            {!isYouTube && (
+                                <a
+                                    href={link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white text-xs font-medium rounded-full backdrop-blur-md flex items-center gap-1.5 transition-colors"
+                                >
+                                    <ExternalLink className="w-3 h-3" />
+                                    <span>Open Site</span>
+                                </a>
+                            )}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowEmbed(false);
+                                }}
+                                className="p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80 transition-colors backdrop-blur-md"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        {isYouTube && youTubeId ? (
+                            <iframe
+                                width="100%"
+                                height="100%"
+                                src={`https://www.youtube.com/embed/${youTubeId}?autoplay=1`}
+                                title={title}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="absolute inset-0"
+                            ></iframe>
+                        ) : (
+                            <iframe
+                                src={link}
+                                title={title}
+                                className="w-full h-full bg-white"
+                                sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                            />
+                        )}
                     </div>
                 ) : (
                     <>
@@ -134,19 +170,15 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
 
                         {/* Top Right Type Badge */}
                         <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2 z-10 border border-white/10 shadow-lg">
-                            {type === "youtube" || (link && link.includes("youtube.com")) ? (
-                                <Youtube className="w-4 h-4 text-[#FF0000] fill-current" />
-                            ) : (
-                                getIcon()
-                            )}
-                            <span className="text-white text-xs font-bold tracking-wide">YouTube</span>
+                            {getIcon()}
+                            <span className="text-white text-xs font-bold tracking-wide">{getLabel()}</span>
                         </div>
                     </>
                 )}
             </div>
 
             {/* Content Body */}
-            <div className="p-4 flex-1 flex flex-col bg-white dark:bg-[#0f1016]">
+            <div className="p-3 flex-1 flex flex-col bg-white dark:bg-[#0f1016]">
                 <div className="flex items-start justify-between gap-3 mb-3">
                     <h3 className="font-bold text-gray-900 dark:text-gray-100 text-[16px] leading-snug line-clamp-2" title={title}>
                         <a href={link} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
@@ -156,7 +188,7 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
                 </div>
 
                 {tags && tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="flex flex-wrap gap-2 mb-2">
                         {tags.map((tag, index) => (
                             <span
                                 key={index}
@@ -169,7 +201,7 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
                 )}
 
                 {/* Spacer to push actions to bottom */}
-                <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-800/50">
+                <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-100 dark:border-gray-800/50">
                     <a
                         href={link}
                         target="_blank"
@@ -188,6 +220,18 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
                         >
                             <Share2 className="w-4 h-4" />
                         </button>
+                        {onEdit && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit();
+                                }}
+                                className="p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                title="Edit"
+                            >
+                                <Pencil className="w-4 h-4" />
+                            </button>
+                        )}
                         {onDelete && (
                             <button
                                 onClick={onDelete}

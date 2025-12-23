@@ -8,7 +8,7 @@ export const BrainChat = ({ isOpen, onClose }) => {
     const [messages, setMessages] = useState([
         {
             role: 'ai',
-            content: "Hi! I'm your SecondBrain AI. Ask me anything about your saved notes, links, or videos."
+            content: "Hi! I'm your SecondBrain AI. I can analyze your saved notes or answer general questions like ChatGPT."
         }
     ]);
     const [input, setInput] = useState('');
@@ -49,9 +49,10 @@ export const BrainChat = ({ isOpen, onClose }) => {
 
         } catch (error) {
             console.error("AI Error:", error);
+            const errorMessage = error.response?.data?.error || error.message || "Sorry, I had trouble thinking about that. Please try again later.";
             setMessages(prev => [...prev, {
                 role: 'ai',
-                content: "Sorry, I had trouble thinking about that. Please try again later."
+                content: `Error: ${errorMessage}. Please check your API key or try again.`
             }]);
         } finally {
             setLoading(false);
@@ -59,7 +60,7 @@ export const BrainChat = ({ isOpen, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-y-0 right-0 w-full md:w-[450px] bg-gray-900 border-l border-gray-800 shadow-2xl transform transition-transform duration-300 z-50 flex flex-col">
+        <div className="fixed inset-y-0 right-0 w-full md:w-[450px] bg-gray-900 border-l border-gray-800 shadow-2xl transform transition-transform duration-300 z-[100] flex flex-col">
             {/* Header */}
             <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/95 backdrop-blur-sm z-10">
                 <div className="flex items-center gap-3">

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Plus, Loader2 } from 'lucide-react';
+import { X, Plus, Loader2, Save } from 'lucide-react';
 import { Button } from './Button';
 import api from '../api';
 
@@ -16,16 +16,55 @@ const DarkInput = ({ label, ...props }) => (
     </div>
 );
 
-export const CreateContentModal = ({ open, onClose, onContentAdded }) => {
+export const CreateContentModal = ({ open, onClose, onContentAdded, initialLink, isEditing, initialData, projectId }) => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
         link: '',
         type: 'video', // default
+        platform: '',
         tags: '',
         description: ''
     });
+
+    useEffect(() => {
+        if (open) {
+            if (isEditing && initialData) {
+                // Formatting tags from array of objects/strings to comma-separated string
+                const formattedTags = initialData.tags
+                    ? initialData.tags.map(t => typeof t === 'object' ? t.title : t).join(', ')
+                    : '';
+
+                setFormData({
+                    title: initialData.title || '',
+                    link: initialData.link || '',
+                    type: initialData.type || 'video',
+                    platform: initialData.platform || '',
+                    tags: formattedTags,
+                    description: initialData.description || ''
+                });
+            } else if (initialLink) {
+                const isGithub = initialLink.includes('github.com');
+                setFormData(prev => ({
+                    ...prev,
+                    link: initialLink,
+                    type: isGithub ? 'git_repo' : ((initialLink.includes('youtube') || initialLink.includes('youtu.be')) ? 'video' : 'article'),
+                    platform: isGithub ? 'GitHub' : ''
+                }));
+            } else {
+                setFormData({
+                    title: '',
+                    link: '',
+                    type: 'video',
+                    platform: '',
+                    tags: '',
+                    description: ''
+                });
+            }
+        }
+    }, [open, initialLink, isEditing, initialData]);
+
 
     if (!open) return null;
 
@@ -40,13 +79,20 @@ export const CreateContentModal = ({ open, onClose, onContentAdded }) => {
                 title: formData.title,
                 link: formData.link,
                 type: formData.type,
+                platform: formData.platform,
                 tags: tagsArray,
-                description: formData.description
+                description: formData.description,
+                projectId // Include projectId if available
             };
 
-            const response = await api.post('/add-content', payload);
+            let response;
+            if (isEditing && initialData?._id) {
+                response = await api.put(`/update-content/${initialData._id}`, payload);
+            } else {
+                response = await api.post('/add-content', payload);
+            }
 
-            if (response.status === 201) {
+            if (response.status === 201 || response.status === 200) {
                 onContentAdded();
                 onClose();
                 // Reset form
@@ -54,17 +100,18 @@ export const CreateContentModal = ({ open, onClose, onContentAdded }) => {
                     title: '',
                     link: '',
                     type: 'video',
+                    platform: '',
                     tags: '',
                     description: ''
                 });
             }
         } catch (error) {
-            console.error("Error adding content:", error);
+            console.error("Error adding/updating content:", error);
             if (error.response && error.response.status === 401) {
                 alert("Session expired. Please login again.");
                 navigate('/');
             } else {
-                alert("Failed to add content. Please try again.");
+                alert(`Failed to ${isEditing ? 'update' : 'add'} content. Please try again.`);
             }
         } finally {
             setLoading(false);
@@ -75,7 +122,7 @@ export const CreateContentModal = ({ open, onClose, onContentAdded }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-700">
                 <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between bg-gray-800/50">
-                    <h2 className="text-xl font-semibold text-gray-100">Add New Content</h2>
+                    <h2 className="text-xl font-semibold text-gray-100">{isEditing ? 'Edit Content' : 'Add New Content'}</h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-200 transition-colors">
                         <X className="w-5 h-5" />
                     </button>
@@ -110,16 +157,24 @@ export const CreateContentModal = ({ open, onClose, onContentAdded }) => {
                                 <option value="article">Article</option>
                                 <option value="audio">Audio</option>
                                 <option value="image">Image</option>
+                                <option value="git_repo">Git Repo</option>
                             </select>
                         </div>
 
                         <DarkInput
-                            label="Tags"
-                            placeholder="tech, productivity (comma sorted)"
-                            value={formData.tags}
-                            onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                            label="Platform (Optional)"
+                            placeholder="e.g. YouTube, Medium"
+                            value={formData.platform}
+                            onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
                         />
                     </div>
+
+                    <DarkInput
+                        label="Tags"
+                        placeholder="tech, productivity (comma sorted)"
+                        value={formData.tags}
+                        onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                    />
 
                     <div className="space-y-1.5">
                         <label className="block text-sm font-medium text-gray-300 ml-1">Description (Optional)</label>
@@ -144,10 +199,10 @@ export const CreateContentModal = ({ open, onClose, onContentAdded }) => {
                         <Button
                             type="submit"
                             loading={loading}
-                            startIcon={<Plus className="w-4 h-4" />}
+                            startIcon={isEditing ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                             className="bg-indigo-600 hover:bg-indigo-500 text-white"
                         >
-                            Add Content
+                            {isEditing ? 'Save Changes' : 'Add Content'}
                         </Button>
                     </div>
                 </form>
