@@ -66,6 +66,9 @@ router.post('/add-content', userAuth, async (req, res) => {
 
         await newContent.save();
 
+        await newContent.populate('userId', 'name email');
+        await newContent.populate('tags');
+
         return res.status(201).json({
             message: "Content Added Successfully",
             data: newContent
