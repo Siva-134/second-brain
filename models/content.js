@@ -24,13 +24,15 @@ const contentSchema = new mongoose.Schema({
     tags: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Tag'
+            ref: 'Tag',
+            index: true
         }
     ],
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'User'
+        ref: 'User',
+        index: true
     },
     sharedWith: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -39,7 +41,8 @@ const contentSchema = new mongoose.Schema({
     projectId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Project',
-        required: false
+        required: false,
+        index: true
     },
     thumbnail: {
         type: String,
