@@ -117,7 +117,7 @@ function Dashboard() {
             if (['video', 'audio', 'article', 'image'].includes(activeTab)) {
                 tabMatch = content.type === activeTab;
             } else if (activeTab === 'youtube') {
-                tabMatch = content.link && content.link.includes('youtube.com');
+                tabMatch = (content.link && (content.link.includes('youtube.com') || content.link.includes('youtu.be'))) || (content.platform && content.platform.toLowerCase() === 'youtube');
             } else if (activeTab === 'twitter') {
                 tabMatch = content.link && (content.link.includes('twitter.com') || content.link.includes('x.com'));
             } else if (activeTab === 'facebook') {
