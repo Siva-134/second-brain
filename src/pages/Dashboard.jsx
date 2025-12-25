@@ -2,9 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import { Plus, Brain, Search, Menu, Sparkles, Sun, Moon, Globe, Youtube, Github, Folder, Trash2, User, Lock } from 'lucide-react';
-import dashboardBg from '../assets/premium-bg.png';
-import headerBg from '../assets/header-bg.png';
-
 import { useTheme } from '../contexts/ThemeContext';
 import { Sidebar } from '../components/Sidebar';
 import { Card } from '../components/Card';
@@ -89,9 +86,7 @@ function Dashboard() {
         try {
             const params = projectId ? { projectId } : {};
             const response = await api.get('/my-contents', { params });
-            console.log("fetchContents response:", response.data);
-            if (response.data && response.data.data) {
-                console.log("Setting contents to:", response.data.data);
+            if (response.data && Array.isArray(response.data.data)) {
                 setContents(response.data.data);
                 if (response.data.currentUserId) {
                     setCurrentUserId(response.data.currentUserId);
@@ -150,22 +145,17 @@ function Dashboard() {
 
     return (
         <div className="flex flex-col h-screen overflow-hidden bg-transparent font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300 relative">
-            {/* Background Image Overlay - Moved to root to avoid z-index/stacking issues with scrollable content */}
+            {/* Optimized CSS Gradient Background - Fast Loading */}
             <div
-                className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat w-full h-full pointer-events-none transition-all duration-300"
-                style={{
-                    backgroundImage: `url(${dashboardBg})`,
-                    opacity: 1 // Force opacity
-                }}
+                className="fixed inset-0 z-0 w-full h-full pointer-events-none transition-all duration-300
+                bg-gradient-to-br from-indigo-50 via-white to-purple-50 
+                dark:from-[#0f172a] dark:via-[#1e1b4b] dark:to-[#312e81]"
             ></div>
 
-            {/* Top Header */}
+            {/* Top Header - Glassmorphism */}
             <div
-                className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 z-[60] transition-all duration-300 bg-cover bg-center relative"
-                style={{ backgroundImage: `url(${headerBg})` }}
+                className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0 z-[60] transition-all duration-300 bg-white/40 dark:bg-black/20 backdrop-blur-xl relative"
             >
-                {/* Overlay for better text readability if needed, though image is dark enough */}
-                <div className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[-1]"></div>
 
                 <div className="flex items-center gap-4 relative z-10">
                     <div className="relative">
@@ -448,29 +438,19 @@ function Dashboard() {
                     setEditingContent(null);
                 }}
                 onContentAdded={(newContent) => {
-                    console.log("onContentAdded called with:", newContent);
                     if (newContent) {
-                        // Optimistic Update
                         setContents(prev => {
                             const prevArray = Array.isArray(prev) ? prev : [];
-                            console.log("Previous contents state:", prevArray);
 
-                            // Avoid duplicates
-                            if (prevArray.some(c => String(c._id) === String(newContent._id))) {
-                                console.log("Updating existing content in state");
-                                const updated = prevArray.map(c => String(c._id) === String(newContent._id) ? newContent : c);
-                                console.log("New contents state (update):", updated);
-                                return updated;
+                            // Check if content already exists (update scenario)
+                            if (prevArray.some(c => c._id === newContent._id)) {
+                                return prevArray.map(c => c._id === newContent._id ? newContent : c);
                             }
-                            const newState = [newContent, ...prevArray];
-                            console.log("New contents state (add):", newState);
-                            return newState;
+                            // Add new content to the top
+                            return [newContent, ...prevArray];
                         });
-
-                        // Silent Re-fetch - DISABLED to prevent overwriting optimistic state
-                        // fetchContents(true);
-                        console.log("Optimistic update applied. Skipping silent fetch.");
                     } else {
+                        // If no content returned (error case?), force fetch
                         fetchContents();
                     }
                 }}
