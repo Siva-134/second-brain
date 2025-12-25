@@ -12,6 +12,19 @@ router.post('/register',async(req,res)=>{
             return res.status(400).json({ message: "Required Fields Missing" });
         }
 
+        if (!email.endsWith('@gmail.com')) {
+            return res.status(400).json({ message: "Email must be a valid @gmail.com address" });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long" });
+        }
+
+        const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+        if (!specialCharRegex.test(password)) {
+            return res.status(400).json({ message: "Password must include at least one special character" });
+        }
+
         const newUser=new User({
             name:name,
             email:email,
