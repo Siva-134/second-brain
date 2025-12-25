@@ -126,8 +126,8 @@ function Dashboard() {
                 tabMatch = content.type === 'git_repo' || (content.link && content.link.includes('github.com'));
             } else if (activeTab === 'shared') {
                 // Show content shared WITH me OR content I shared with OTHERS
-                const isSharedWithMe = content.userId._id !== currentUserId;
-                const isSharedByMe = content.userId._id === currentUserId && content.sharedWith && content.sharedWith.length > 0;
+                const isSharedWithMe = (content.userId?._id || content.userId) !== currentUserId;
+                const isSharedByMe = (content.userId?._id || content.userId) === currentUserId && content.sharedWith && content.sharedWith.length > 0;
                 tabMatch = isSharedWithMe || isSharedByMe;
             }
         }
@@ -373,16 +373,27 @@ function Dashboard() {
                                                         setShareData(data);
                                                         setShareModalOpen(true);
                                                     }}
-                                                    onDelete={content.userId._id === currentUserId ? async () => {
-                                                        try {
-                                                            await api.delete(`/remove-content/${content._id}`);
-                                                            fetchContents();
-                                                        } catch (e) { console.error(e) }
-                                                    } : null}
-                                                    onEdit={content.userId._id === currentUserId ? () => {
-                                                        setEditingContent(content);
-                                                        setIsModalOpen(true);
-                                                    } : null}
+                                                    onDelete={() => {
+                                                        const ownerId = content.userId?._id || content.userId;
+                                                        if (String(ownerId) === String(currentUserId)) {
+                                                            (async () => {
+                                                                try {
+                                                                    await api.delete(`/remove-content/${content._id}`);
+                                                                    fetchContents();
+                                                                } catch (e) {
+                                                                    console.error(e);
+                                                                    alert("Failed to delete content");
+                                                                }
+                                                            })();
+                                                        }
+                                                    }}
+                                                    onEdit={() => {
+                                                        const ownerId = content.userId?._id || content.userId;
+                                                        if (String(ownerId) === String(currentUserId)) {
+                                                            setEditingContent(content);
+                                                            setIsModalOpen(true);
+                                                        }
+                                                    }}
                                                     platform={content.platform}
                                                 />
                                             )}
@@ -421,22 +432,8 @@ function Dashboard() {
                     setModalInitialLink(''); // Reset after close
                     setEditingContent(null);
                 }}
-                onContentAdded={(newContent) => {
-                    if (newContent) {
-                        // Optimistic update: Add new content to top of list immediately
-                        // If it's an edit (which returns the updated object), you might want to replace it
-                        // checking if we already have it
-                        setContents(prev => {
-                            const exists = prev.find(c => c._id === newContent._id);
-                            if (exists) {
-                                return prev.map(c => c._id === newContent._id ? newContent : c);
-                            }
-                            return [newContent, ...prev];
-                        });
-                    } else {
-                        // Fallback
-                        fetchContents();
-                    }
+                onContentAdded={() => {
+                    fetchContents();
                 }}
                 initialLink={modalInitialLink}
                 isEditing={!!editingContent}
