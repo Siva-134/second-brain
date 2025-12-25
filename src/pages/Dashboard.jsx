@@ -421,7 +421,23 @@ function Dashboard() {
                     setModalInitialLink(''); // Reset after close
                     setEditingContent(null);
                 }}
-                onContentAdded={fetchContents}
+                onContentAdded={(newContent) => {
+                    if (newContent) {
+                        // Optimistic update: Add new content to top of list immediately
+                        // If it's an edit (which returns the updated object), you might want to replace it
+                        // checking if we already have it
+                        setContents(prev => {
+                            const exists = prev.find(c => c._id === newContent._id);
+                            if (exists) {
+                                return prev.map(c => c._id === newContent._id ? newContent : c);
+                            }
+                            return [newContent, ...prev];
+                        });
+                    } else {
+                        // Fallback
+                        fetchContents();
+                    }
+                }}
                 initialLink={modalInitialLink}
                 isEditing={!!editingContent}
                 initialData={editingContent}

@@ -93,7 +93,8 @@ export const CreateContentModal = ({ open, onClose, onContentAdded, initialLink,
             }
 
             if (response.status === 201 || response.status === 200) {
-                onContentAdded();
+                // Pass the created/updated content back to parent
+                onContentAdded(response.data.data);
                 onClose();
                 // Reset form
                 setFormData({
