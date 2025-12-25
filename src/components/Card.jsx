@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Share2, Trash2, Youtube, Twitter, FileText, Video, Mic, Image as ImageIcon, ExternalLink, Play, X, Check, Github, Pencil } from "lucide-react";
 
 // Card component for displaying content
-export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, onShare, onEdit, platform }) => {
+export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, onShare, onEdit, onPreview, platform }) => {
     const [imageError, setImageError] = useState(false);
     const [showEmbed, setShowEmbed] = useState(false);
 
@@ -74,8 +74,8 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
         e.stopPropagation();
         if (isYouTube && youTubeId) {
             setShowEmbed(true);
-        } else if (type === 'article' || type === 'video') {
-            setShowEmbed(true);
+        } else if (onPreview) {
+            onPreview(); // Open in external Modal
         } else {
             window.open(link, '_blank');
         }
@@ -181,7 +181,7 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
             <div className="p-3 flex-1 flex flex-col bg-white dark:bg-[#0f1016]">
                 <div className="flex items-start justify-between gap-3 mb-3">
                     <h3 className="font-bold text-gray-900 dark:text-gray-100 text-[16px] leading-snug line-clamp-2" title={title}>
-                        <a href={link} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
+                        <a href={link} onClick={handlePlay} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
                             {title}
                         </a>
                     </h3>
@@ -202,15 +202,13 @@ export const Card = ({ title, type, link, tags, onDelete, thumbnail, contentId, 
 
                 {/* Spacer to push actions to bottom */}
                 <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-100 dark:border-gray-800/50">
-                    <a
-                        href={link}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <button
+                        onClick={handlePlay}
                         className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 flex items-center gap-1.5 transition-colors group/link"
                     >
                         <ExternalLink className="w-3.5 h-3.5 group-hover/link:scale-110 transition-transform" />
                         Open Link
-                    </a>
+                    </button>
 
                     <div className="flex items-center gap-1">
                         <button

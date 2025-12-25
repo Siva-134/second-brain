@@ -15,6 +15,7 @@ import { Input } from '../components/Input';
 import { ShareModal } from '../components/ShareModal';
 import { WebSearch } from '../components/WebSearch';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
+import { ContentPreviewModal } from '../components/ContentPreviewModal';
 import { API_URL } from '../config';
 
 // Dashboard component
@@ -38,6 +39,7 @@ function Dashboard() {
     const [userData, setUserData] = useState({ name: '', email: '' });
     const [showProfile, setShowProfile] = useState(false);
     const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+    const [previewData, setPreviewData] = useState({ open: false, link: '', title: '', type: '' });
     const { theme, toggleTheme } = useTheme();
 
     const fetchUserProjects = async () => {
@@ -82,8 +84,8 @@ function Dashboard() {
         }
     };
 
-    const fetchContents = async () => {
-        setLoading(true);
+    const fetchContents = async (isSilent = false) => {
+        if (!isSilent) setLoading(true);
         try {
             const params = projectId ? { projectId } : {};
             const response = await api.get('/my-contents', { params });
@@ -99,7 +101,7 @@ function Dashboard() {
                 navigate('/');
             }
         } finally {
-            setLoading(false);
+            if (!isSilent) setLoading(false);
         }
     };
 
@@ -376,13 +378,18 @@ function Dashboard() {
                                                     onDelete={() => {
                                                         const ownerId = content.userId?._id || content.userId;
                                                         if (String(ownerId) === String(currentUserId)) {
+                                                            // Optimistic Delete
+                                                            setContents(prev => prev.filter(c => String(c._id) !== String(content._id)));
+
                                                             (async () => {
                                                                 try {
                                                                     await api.delete(`/remove-content/${content._id}`);
-                                                                    fetchContents();
+                                                                    // Silent re-fetch to ensure sync
+                                                                    fetchContents(true);
                                                                 } catch (e) {
                                                                     console.error(e);
                                                                     alert("Failed to delete content");
+                                                                    fetchContents(true); // Revert on failure
                                                                 }
                                                             })();
                                                         }
@@ -394,6 +401,12 @@ function Dashboard() {
                                                             setIsModalOpen(true);
                                                         }
                                                     }}
+                                                    onPreview={() => setPreviewData({
+                                                        open: true,
+                                                        link: content.link,
+                                                        title: content.title,
+                                                        type: content.type
+                                                    })}
                                                     platform={content.platform}
                                                 />
                                             )}
@@ -432,13 +445,35 @@ function Dashboard() {
                     setModalInitialLink(''); // Reset after close
                     setEditingContent(null);
                 }}
-                onContentAdded={() => {
-                    fetchContents();
+                onContentAdded={(newContent) => {
+                    if (newContent) {
+                        // Optimistic Update
+                        setContents(prev => {
+                            const prevArray = Array.isArray(prev) ? prev : [];
+                            // Avoid duplicates
+                            if (prevArray.some(c => String(c._id) === String(newContent._id))) {
+                                return prevArray.map(c => String(c._id) === String(newContent._id) ? newContent : c);
+                            }
+                            return [newContent, ...prevArray];
+                        });
+                        // Silent Re-fetch
+                        fetchContents(true);
+                    } else {
+                        fetchContents();
+                    }
                 }}
                 initialLink={modalInitialLink}
                 isEditing={!!editingContent}
                 initialData={editingContent}
                 projectId={projectId}
+            />
+
+            <ContentPreviewModal
+                isOpen={previewData.open}
+                onClose={() => setPreviewData({ ...previewData, open: false })}
+                link={previewData.link}
+                title={previewData.title}
+                type={previewData.type}
             />
 
             <ShareModal
