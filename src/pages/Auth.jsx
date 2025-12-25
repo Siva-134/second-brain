@@ -26,6 +26,27 @@ function Auth() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage('');
+
+        if (!isLogin) {
+            const { email, password } = formData;
+
+            if (!email.endsWith('@gmail.com')) {
+                setMessage('Email must be a valid @gmail.com address');
+                return;
+            }
+
+            if (password.length < 6) {
+                setMessage('Password must be at least 6 characters long');
+                return;
+            }
+
+            const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+            if (!specialCharRegex.test(password)) {
+                setMessage('Password must include at least one special character (e.g., @, #, $)');
+                return;
+            }
+        }
+
         setLoading(true);
 
         try {
