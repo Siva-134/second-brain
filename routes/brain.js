@@ -5,8 +5,39 @@ const userAuth = require("../middleware/auth");
 const Content = require("../models/content");
 require("dotenv").config();
 
+// Initialize model dynamically
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+async function getModel() {
+    try {
+        // Explicitly fetch models using REST because SDK listModels can be tricky in some versions
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
+        const data = await response.json();
+        
+        let modelName = 'gemini-1.5-flash'; // Default fallback
+
+        if (data.models) {
+            // Find first available 'generateContent' model, preferring flash/pro
+            const validModels = data.models
+                .filter(m => m.supportedGenerationMethods.includes('generateContent'))
+                .map(m => m.name.replace('models/', ''));
+
+            console.log("Available Gemini Models:", validModels);
+
+            const preferred = validModels.find(m => m.includes('flash')) || 
+                              validModels.find(m => m.includes('pro')) || 
+                              validModels[0];
+            
+            if (preferred) modelName = preferred;
+        }
+        
+        console.log(`Using Gemini Model: ${modelName}`);
+        return genAI.getGenerativeModel({ model: modelName });
+    } catch (e) {
+        console.error("Error selecting model:", e);
+        return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    }
+}
 
 router.post("/ask-brain", userAuth, async (req, res) => {
     try {
@@ -32,6 +63,7 @@ router.post("/ask-brain", userAuth, async (req, res) => {
         User's Question: ${question}
         `;
 
+        const model = await getModel();
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
