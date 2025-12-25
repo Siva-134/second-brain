@@ -86,11 +86,24 @@ function FloatingShapes() {
 }
 
 const ThreeDBackground = ({ backgroundImage }) => {
+    const [imageLoaded, setImageLoaded] = React.useState(false);
+
+    React.useEffect(() => {
+        if (backgroundImage) {
+            const img = new Image();
+            img.src = backgroundImage;
+            img.onload = () => setImageLoaded(true);
+        }
+    }, [backgroundImage]);
+
     return (
-        <div
-            className="fixed inset-0 z-0 bg-gray-950 bg-cover bg-center bg-no-repeat transition-all duration-500"
-            style={backgroundImage ? { backgroundImage: `url(${backgroundImage})` } : {}}
-        >
+        <div className="fixed inset-0 z-0 bg-gray-950 overflow-hidden">
+            {/* Smooth Loading Background Image */}
+            <div
+                className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                style={backgroundImage ? { backgroundImage: `url(${backgroundImage})` } : {}}
+            />
+
             <Canvas camera={{ position: [0, 0, 4] }}>
                 <ambientLight intensity={1.5} />
                 <directionalLight position={[10, 10, 5]} intensity={3} />
