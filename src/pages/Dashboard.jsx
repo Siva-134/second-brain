@@ -89,7 +89,9 @@ function Dashboard() {
         try {
             const params = projectId ? { projectId } : {};
             const response = await api.get('/my-contents', { params });
+            console.log("fetchContents response:", response.data);
             if (response.data && response.data.data) {
+                console.log("Setting contents to:", response.data.data);
                 setContents(response.data.data);
                 if (response.data.currentUserId) {
                     setCurrentUserId(response.data.currentUserId);
@@ -446,18 +448,28 @@ function Dashboard() {
                     setEditingContent(null);
                 }}
                 onContentAdded={(newContent) => {
+                    console.log("onContentAdded called with:", newContent);
                     if (newContent) {
                         // Optimistic Update
                         setContents(prev => {
                             const prevArray = Array.isArray(prev) ? prev : [];
+                            console.log("Previous contents state:", prevArray);
+
                             // Avoid duplicates
                             if (prevArray.some(c => String(c._id) === String(newContent._id))) {
-                                return prevArray.map(c => String(c._id) === String(newContent._id) ? newContent : c);
+                                console.log("Updating existing content in state");
+                                const updated = prevArray.map(c => String(c._id) === String(newContent._id) ? newContent : c);
+                                console.log("New contents state (update):", updated);
+                                return updated;
                             }
-                            return [newContent, ...prevArray];
+                            const newState = [newContent, ...prevArray];
+                            console.log("New contents state (add):", newState);
+                            return newState;
                         });
-                        // Silent Re-fetch
-                        fetchContents(true);
+
+                        // Silent Re-fetch - DISABLED to prevent overwriting optimistic state
+                        // fetchContents(true);
+                        console.log("Optimistic update applied. Skipping silent fetch.");
                     } else {
                         fetchContents();
                     }
