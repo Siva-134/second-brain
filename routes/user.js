@@ -1,5 +1,7 @@
 const express=require('express');
 const User = require('../models/user');
+const sendEmail = require('../utils/email');
+const crypto = require('crypto');
 const router=express.Router();
 const jwt=require('jsonwebtoken');
 const userAuth = require('../middleware/auth');
@@ -128,6 +130,65 @@ router.post('/change-password', userAuth, async (req, res) => {
     } catch (error) {
         console.error("Change password error:", error);
         res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Set OTP and expiration (10 minutes)
+        user.resetPasswordOtp = otp;
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        const message = `Your password reset OTP is ${otp}. It is valid for 10 minutes.`;
+        await sendEmail(user.email, "Password Reset OTP", message);
+
+        res.json({ message: "OTP sent to your email" });
+
+    } catch (error) {
+        console.error("Forgot password error:", error);
+        res.status(500).json({ message: "Error sending email", error: error.message });
+    }
+});
+
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        const user = await User.findOne({ 
+            email, 
+            resetPasswordOtp: otp,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid or expired OTP" });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long" });
+        }
+
+        user.password = newPassword;
+        user.resetPasswordOtp = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.json({ message: "Password reset successful" });
+
+    } catch (error) {
+        console.error("Reset password error:", error);
+        res.status(500).json({ message: "Error resetting password" });
     }
 });
 
