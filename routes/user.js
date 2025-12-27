@@ -137,9 +137,13 @@ router.post('/change-password', userAuth, async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
     try {
         const { email } = req.body;
+        console.log(`[Forgot Password] Received request for email: '${email}'`); // Log received email
+
         const user = await User.findOne({ email });
+        console.log(`[Forgot Password] DB Query Result:`, user ? `Found user ${user._id}` : "User NOT found");
 
         if (!user) {
+            console.log(`[Forgot Password] Returning 404 for ${email}`);
             return res.status(404).json({ message: "User not found" });
         }
 
