@@ -247,15 +247,23 @@ function Auth() {
                             </>
                         )}
                         {view === 'signup' && (
-                            <p className="text-gray-400 text-sm">
-                                Already have an account?{' '}
+                            <>
                                 <button
-                                    onClick={() => handleToggle('login')}
-                                    className="text-indigo-400 font-medium hover:text-indigo-300 transition-colors"
+                                    onClick={() => handleToggle('forgot-password')}
+                                    className="text-gray-400 hover:text-indigo-400 text-sm transition-colors"
                                 >
-                                    Log in
+                                    Forgot Password?
                                 </button>
-                            </p>
+                                <p className="text-gray-400 text-sm">
+                                    Already have an account?{' '}
+                                    <button
+                                        onClick={() => handleToggle('login')}
+                                        className="text-indigo-400 font-medium hover:text-indigo-300 transition-colors"
+                                    >
+                                        Log in
+                                    </button>
+                                </p>
+                            </>
                         )}
                         {(view === 'forgot-password' || view === 'reset-password') && (
                             <button
