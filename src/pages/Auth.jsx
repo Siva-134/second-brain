@@ -81,7 +81,7 @@ function Auth() {
             }
 
         } catch (error) {
-            setMessage(error.message || error.response?.data?.message || 'Something went wrong');
+            setMessage(error.response?.data?.message || error.message || 'Something went wrong');
         } finally {
             setLoading(false);
         }
