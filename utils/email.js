@@ -20,7 +20,8 @@ const sendEmail = async (email, subject, text) => {
                 pass: process.env.EMAIL_PASS,
             },
             logger: true,    // Log info to console
-            debug: true      // Include SMTP traffic in logs
+            debug: true,      // Include SMTP traffic in logs
+            connectionTimeout: 10000 // 10 seconds
         });
 
         const info = await transporter.sendMail({
