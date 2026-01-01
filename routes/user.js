@@ -162,7 +162,7 @@ router.post('/forgot-password', async (req, res) => {
 
     } catch (error) {
         console.error("Forgot password error:", error);
-        res.status(500).json({ message: "Error sending email", error: error.message });
+        res.status(500).json({ message: `Error sending email: ${error.message}`, error: error.message });
     }
 });
 
