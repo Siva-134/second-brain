@@ -6,6 +6,7 @@ const sendEmail = async (email, subject, text) => {
         console.log(`[Email Debug] EMAIL_PASS present: ${!!process.env.EMAIL_PASS}`);
         if (process.env.EMAIL_USER) console.log(`[Email Debug] User: ${process.env.EMAIL_USER}`);
         if (process.env.EMAIL_PASS) console.log(`[Email Debug] Pass length: ${process.env.EMAIL_PASS.length}`);
+        console.log(`[Email Debug] Sending to: ${email}`);
 
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
             throw new Error("Missing EMAIL_USER or EMAIL_PASS environment variables");
