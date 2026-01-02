@@ -1,8 +1,9 @@
 import axios from 'axios';
 
-// Hardcoded for production stability
-export const API_URL = "https://second-brain-2-gwgk.onrender.com/api/v1";
-//export const API_URL = "http://localhost:3000/api/v1";
+const isProduction = import.meta.env.PROD;
+export const API_URL = isProduction 
+    ? "https://second-brain-2-gwgk.onrender.com/api/v1" 
+    : "http://localhost:3000/api/v1";
 console.log("Initialize API client:", API_URL);
 
 const api = axios.create({
