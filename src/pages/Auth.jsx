@@ -199,7 +199,7 @@ function Auth() {
                         )}
 
                         {message && (
-                            <div className={`p-3 rounded-lg text-sm text-center ${message.includes('Success') || message.includes('Log') || message.includes('OTP') || message.includes('Password updated')
+                            <div className={`p-3 rounded-lg text-sm text-center ${message.toLowerCase().includes('success') || message.includes('Log') || message.includes('OTP') || message.toLowerCase().includes('updated')
                                 ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                                 : 'bg-red-500/10 text-red-400 border border-red-500/20'
                                 }`}>
