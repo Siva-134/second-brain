@@ -40,11 +40,11 @@ export const Sidebar = ({ activeTab, onTabChange, isProjectView }) => {
 
     const menuItems = [
         { id: 'all', label: 'All Notes', icon: <Grid className="w-5 h-5" /> },
-        // { id: 'shared', label: 'Shared Content', icon: <Users className="w-5 h-5 text-purple-500" /> },
+        { id: 'shared', label: 'Shared Content', icon: <Users className="w-5 h-5 text-purple-500" /> },
         { id: 'youtube', label: 'Youtube', icon: <Youtube className="w-5 h-5 text-red-500" /> },
         { id: 'twitter', label: 'Twitter', icon: <Twitter className="w-5 h-5 text-blue-400" /> },
         { id: 'github', label: 'GitHub', icon: <Github className="w-5 h-5 text-gray-700 dark:text-gray-300" /> },
-        { id: 'shared', label: 'Shared Content', icon: <Users className="w-5 h-5 text-purple-500" /> },
+        // { id: 'shared', label: 'Shared Content', icon: <Users className="w-5 h-5 text-purple-500" /> },
     ];
 
     const typeItems = [
