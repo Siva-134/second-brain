@@ -14,7 +14,6 @@ const sendEmail = async (email, subject, text) => {
 
         const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
-            host: "smtp.gmail.com",
             port: 465,       // Use 465 for partial SSL/TLS
             secure: true,    // true for 465
             auth: {
