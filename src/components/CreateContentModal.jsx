@@ -120,7 +120,7 @@ export const CreateContentModal = ({ open, onClose, onContentAdded, initialLink,
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-700">
                 <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between bg-gray-800/50">
                     <h2 className="text-xl font-semibold text-gray-100">{isEditing ? 'Edit Content' : 'Add New Content'}</h2>
