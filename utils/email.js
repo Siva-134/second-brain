@@ -14,15 +14,15 @@ const sendEmail = async (email, subject, text) => {
 
         const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
-            port: 465,       // Use 465 for partial SSL/TLS
-            secure: true,    // true for 465
+            port: 587,       // Use 587 for STARTTLS
+            secure: false,   // false for 587
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
             },
-            logger: true,    // Log info to console
-            debug: true,      // Include SMTP traffic in logs
-            connectionTimeout: 20000 // 20 seconds
+            logger: true,
+            debug: true,
+            connectionTimeout: 10000, // 10 seconds
         });
 
         const info = await transporter.sendMail({
